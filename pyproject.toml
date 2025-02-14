@@ -13,5 +13,6 @@ dependencies = [
     "opencv-python>=4.11.0.86",
     "python-dotenv>=1.0.1",
     "roboflow",
+    "seaborn>=0.13.2",
     "tensorflow[and-cuda]>=2.18.0",
 ]
