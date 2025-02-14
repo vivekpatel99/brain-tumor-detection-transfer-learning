@@ -42,7 +42,7 @@ class PrepareDataset:
         
         return _images, _class_ids, _bboxes
 
-    def get_dataset(self) -> tuple[list[str], np.ndarray, np.ndarray]:
+    def get_dataset(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Loads and parses YOLOv8 labels.
 
         Args:
@@ -133,4 +133,4 @@ class PrepareDataset:
         self.bboxes = np.array(self.bboxes, dtype=np.float32)
         self.class_ids = np.array(self.class_ids, dtype=np.int8)
 
-        return self.images, (self.class_ids, self.bboxes)
+        return self.images, self.class_ids, self.bboxes
