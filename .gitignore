@@ -173,3 +173,5 @@ cython_debug/
 kaggle.json
 .env
 datasets/*
+training_checkpoints/
+*.h5
