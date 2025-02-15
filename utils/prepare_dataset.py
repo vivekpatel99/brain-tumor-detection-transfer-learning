@@ -1,10 +1,17 @@
+
 from pathlib import Path
 
 import cv2
+import imgaug as ia
+
+# https://github.com/aleju/imgaug/issues/859
+import imgaug.augmenters as iaa
 import numpy as np
 import tensorflow as tf
 import tqdm
 from tqdm.notebook import tqdm
+
+from utils.bounding_box_funcs import convert_coordinates_for_plot
 
 
 class PrepareDataset:
@@ -20,27 +27,46 @@ class PrepareDataset:
         self.images = []
         self.class_ids = []
         self.bboxes = []
+        
+        self.rebal_images = []
+        self.rebal_class_ids = []
+        self.rebal_bboxes = []
+        # https://www.activeloop.ai/resources/better-object-detection-image-augmentation-with-tensor-flow-and-albumentations/
+        self.train_aug = iaa.Sequential([
+            iaa.GammaContrast(1.5),
+            iaa.Fliplr(0.3),
 
-    def seperate_class_with_datasets(self, class_id):
+            # `Sometimes()` applies a function randomly to the inputs with
+            # a given probability (0.3, in this case).
+            iaa.Sometimes(0.3, iaa.Affine(rotate=10, scale=(0.5, 0.7))),
+        ])
+    def seperate_class_with_datasets(self, class_id:int):
         idx = np.where(self.class_ids == class_id)[0]
         return (np.array(self.images)[idx], self.class_ids[idx], self.bboxes[idx])
     
-    def rebalance_by_down_sampling_datasets(self):
+    def rebalance_by_down_sampling_datasets(self, augment=False, plot=False):
 
         unique_class_ids, value_counts  = np.unique(self.class_ids, return_counts=True)
         print(f"[INFO] Unique class ids: {unique_class_ids}, value counts: {value_counts}")
 
         down_sampling_size = value_counts.min()
-        _images = []
-        _class_ids = []
-        _bboxes = []
+        print(f"[INFO] Down sampling size: {down_sampling_size}")
+        
+        self.rebal_images = []
+        self.rebal_class_ids = []
+        self.rebal_bboxes = []
+
         for id in unique_class_ids:
             images, class_ids, bboxes = self.seperate_class_with_datasets(id)
-            _images.extend(images[:down_sampling_size])
-            _class_ids.extend(class_ids[:down_sampling_size])
-            _bboxes.extend(bboxes[:down_sampling_size])
-        
-        return _images, _class_ids, _bboxes
+            self.rebal_images.extend(images[:down_sampling_size])
+            self.rebal_class_ids.extend(class_ids[:down_sampling_size])
+            self.rebal_bboxes.extend(bboxes[:down_sampling_size])
+
+        if augment:
+            self.prepare_dataset_augmented(plot=plot)
+
+    
+        return self.rebal_images, self.rebal_class_ids, self.rebal_bboxes
 
     def get_dataset(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Loads and parses YOLOv8 labels.
@@ -101,6 +127,8 @@ class PrepareDataset:
                 image_path = file_name
                 label_file_path = self.label_dir / f'{file_name.stem}.txt'
 
+                image = cv2.imread(str(image_path))
+               
                 if not label_file_path.exists():
                     print(f"Label file not found for image: {image_path}")
                     continue
@@ -118,7 +146,7 @@ class PrepareDataset:
                         class_id = int(values[0])  # Explicit int conversion for class ID
                         coords = values[1:5].astype(np.float32)  # Ensure float32 for coords
                         
-                        self.images.append(str(image_path))
+                        self.images.append(image)
                         self.bboxes.append(coords)
                         self.class_ids.append(class_id)
 
@@ -129,8 +157,33 @@ class PrepareDataset:
                         print(f"[ERROR] - {e} in file {label_file_path} on line: {line}")
                         continue
 
-        self.images = np.array(self.images)
-        self.bboxes = np.array(self.bboxes, dtype=np.float32)
+        # self.images = np.array(self.images)
+        self.bboxes = np.array(self.bboxes)
         self.class_ids = np.array(self.class_ids, dtype=np.int8)
 
         return self.images, self.class_ids, self.bboxes
+    
+    def prepare_dataset_augmented(self, plot=False):
+        self.augmented_images = []
+        self.augmented_bbxes = []
+        self.augmented_class_ids = []
+        # i = 0
+        for img, id, bbx in zip(self.rebal_images, self.rebal_class_ids, self.rebal_bboxes):
+            # print(bbx)
+            x1, y1, x2, y2 = convert_coordinates_for_plot(img, bbx, plot=plot)
+            # print(x1, y1, x2, y2)
+            (new_image, new_bbx) = self.train_aug(image=img, bounding_boxes=ia.BoundingBox(x1=x1, y1=y1, x2=x2, y2=y2, label=id))
+            self.augmented_images.append(new_image)
+            # print(new_bbx)
+            self.augmented_bbxes.append(np.array([new_bbx.x1, 
+                                        new_bbx.y1, 
+                                        new_bbx.x2, 
+                                        new_bbx.y2]))
+            
+            self.augmented_class_ids.append(new_bbx.label)
+            # if i > 5:
+            #     break
+            # i += 1
+        self.rebal_images.extend(self.augmented_images)
+        self.rebal_class_ids.extend(self.augmented_class_ids)
+        self.rebal_bboxes.extend(self.augmented_bbxes)
