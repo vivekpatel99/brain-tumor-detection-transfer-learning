@@ -7,6 +7,7 @@ import imgaug as ia
 # https://github.com/aleju/imgaug/issues/859
 import imgaug.augmenters as iaa
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import tqdm
 from tqdm.notebook import tqdm
@@ -122,7 +123,7 @@ class PrepareDataset:
                 - Bounding boxes (NumPy array, shape (num_images, max_objects, 4), dtype=np.float32).
         """
 
-        for file_name in tqdm(list(self.image_dir.iterdir())):  # Removed [:100]
+        for file_name in tqdm(list(self.image_dir.iterdir())[:1000]):  # Removed [:100]
             if file_name.suffix.lower() in (".jpg", ".png", ".jpeg"): # Added .jpeg and lower() for robustness
                 image_path = file_name
                 label_file_path = self.label_dir / f'{file_name.stem}.txt'
@@ -187,3 +188,65 @@ class PrepareDataset:
         self.rebal_images.extend(self.augmented_images)
         self.rebal_class_ids.extend(self.augmented_class_ids)
         self.rebal_bboxes.extend(self.augmented_bbxes)
+
+
+
+
+class AnnotationProcessor:
+    def __init__(self, annotation_file):
+        self.annotation_file = annotation_file
+        self.df = pd.read_csv(self.annotation_file)  # Assumes CSV format
+
+    def process_annotations(self, image_dir):
+        """
+        Processes annotations and draws bounding boxes on images.
+
+        Args:
+            image_dir: The directory containing the images.
+
+        Returns:
+            A list of tuples, where each tuple contains:
+                - The image with bounding boxes drawn.
+                - A list of normalized bounding box coordinates for each object in the image.
+        """
+        processed_images = []
+
+        for image_name in self.df['filename'].unique():  # Iterate over unique images
+            image_path = f"{image_dir}/{image_name}"  # Construct full image path
+            try:
+                img = cv2.imread(image_path)
+                if img is None:
+                    print(f"Warning: Image not found at {image_path}")
+                    continue  # Skip to the next image
+
+                img_height, img_width, _ = img.shape
+
+                image_annotations = self.df[self.df['filename'] == image_name]  # Get annotations for this image
+                normalized_boxes = []
+
+                for _, row in image_annotations.iterrows():
+                    x_min = int(row['xmin'])
+                    y_min = int(row['ymin'])
+                    x_max = int(row['xmax'])
+                    y_max = int(row['ymax'])
+                    label = row['class']  # or 'label' depending on your CSV
+
+                    # Normalize bounding box coordinates
+                    x_min_norm = x_min / img_width
+                    y_min_norm = y_min / img_height
+                    x_max_norm = x_max / img_width
+                    y_max_norm = y_max / img_height
+                    normalized_boxes.append([x_min_norm, y_min_norm, x_max_norm, y_max_norm, label])  # Include label
+
+
+                    # Draw bounding box (optional, for visualization)
+                    cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)  # Green box
+                    cv2.putText(img, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+
+                processed_images.append((img, normalized_boxes))
+
+            except Exception as e:
+                print(f"Error processing image {image_name}: {e}")
+
+        return processed_images
