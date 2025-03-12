@@ -14,7 +14,12 @@
 	// run the container with all GPUs
 	"runArgs": [
 		"--gpus",
-		"all"
+		"all",
+		"--ulimit",
+		"memlock=-1:-1",
+		"--ulimit",
+		"nofile=65536:65536",
+		"--ipc=host" // provide max shared memory or "--shm-size=24g"
 	],
 	// 4. Features to add to the Dev Container. More info: https://containers.dev/implementors/features.
 	"features": {
@@ -70,7 +75,8 @@
 		}
 	},
 	// 6. Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "root",
+	"remoteUser": "ubuntu",
+	"updateRemoteUserUID": true,
 	// the following commands are related to container lifecylce. More info: https://containers.dev/implementors/json_reference/#lifecycle-scripts
 	// 7. Use 'initializeCommand' to run commands ON THE HOST before container is created or started.
 	// "initializeCommand": "",

@@ -4,8 +4,7 @@
 # ARG USER_UID
 # ARG USER_GID
 
-# FROM nvcr.io/nvidia/tensorflow:24.05-tf2-py3
-FROM tensorflow/tensorflow:latest-gpu-jupyter
+FROM nvcr.io/nvidia/tensorflow:25.01-tf2-py3
 
 
 # RUN addgroup --gid $USER_GID builder && \

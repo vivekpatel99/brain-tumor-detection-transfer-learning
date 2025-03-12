@@ -72,6 +72,9 @@ def main():
     if not found_gpu:
         log.error("No GPU found")
         raise Exception("No GPU found")
+    
+    mlflow.set_experiment("/brain-tumor-resnet50")
+    mlflow.tensorflow.autolog(log_models=True, log_datasets=False)
 
     prepare_train_dataset = AnnotationProcessor(annotation_file= str(TRAIN_DIR/'_annotations.csv'))
     _class_map = {v: k for k, v in enumerate(CLASS_NAME)}
@@ -83,8 +86,9 @@ def main():
     valid_ds = _prepare_ds(valid_images, valid_class_ids, valid_bboxes, is_train=False)
 
     METRICS = [
-        tf.keras.metrics.Precision(name='precision'),
-        tf.keras.metrics.Recall(name='recall'),
+        tf.keras.metrics.BinaryAccuracy(),
+        tf.keras.metrics.Precision(),
+        tf.keras.metrics.Recall(),
         tf.keras.metrics.AUC(name='AUC', multi_label=True), 
         tf.keras.metrics.F1Score(name='f1_score',average='weighted'),
     ]
@@ -114,15 +118,10 @@ def main():
     ]
     model = resnet50.final_model(input_shape=(IMG_SIZE, IMG_SIZE,3), num_classes=NUM_CLASSES)
 
-    optimizer=tf.keras.optimizers.Adam(learning_rate=cfg.TRAIN.LEARNING_RATE)
-    model.compile(
-    optimizer=optimizer,
-    loss={'classification': 'binary_crossentropy', 'bounding_box': 'mse'},
+    optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
+    model.compile(optimizer=optimizer,
+    loss={'classification': tf.keras.losses.BinaryCrossentropy(from_logits=False), 'bounding_box': tf.keras.losses.MeanSquaredError()},
     metrics={'classification': METRICS, 'bounding_box': 'mse'})  # Use IoU metric
-   
-
-    mlflow.set_experiment("/brain-tumor-resnet50")
-    mlflow.tensorflow.autolog(log_models=True, log_datasets=False)
    
     # Get the length of the training set
     length_of_training_dataset = len(train_images)
@@ -135,10 +134,10 @@ def main():
 
     model.fit(
         train_ds,
-        steps_per_epoch=steps_per_epoch,
+        # steps_per_epoch=steps_per_epoch,
         epochs=NUM_EPOCHS,
         validation_data=valid_ds,
-        validation_steps=validation_steps,
+        # validation_steps=validation_steps,
         batch_size=BATCH_SIZE,
         callbacks=[callbacks],
     )

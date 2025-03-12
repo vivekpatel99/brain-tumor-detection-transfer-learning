@@ -3,7 +3,7 @@ import tensorflow as tf
 
 
 ### Define ResNet50 as a Feature Extractor
-def feature_extractor(inputs)-> tf.keras.Model:
+def feature_extractor(inputs)-> keras.Model:
     resnet50 = tf.keras.applications.ResNet50(
         include_top = False, 
         weights = "imagenet",    
@@ -17,7 +17,7 @@ def feature_extractor(inputs)-> tf.keras.Model:
 
 
 ### Define Dense Layers
-def dense_layers(features)->tf.keras.Layer:
+def dense_layers(features)-> keras.Layer:
     x = keras.layers.Conv2D(filters=256, kernel_size=(1, 1), activation='relu')(features) # 1x1 conv
     x = keras.layers.BatchNormalization()(x)
     x = keras.layers.GlobalAveragePooling2D()(x)
@@ -28,20 +28,20 @@ def dense_layers(features)->tf.keras.Layer:
     return x
 
 ### Define Bounding Box Regression
-def bounding_box_regression(x, num_classes:int)->tf.keras.Layer:
+def bounding_box_regression(x, num_classes:int)->keras.Layer:
     bbox_shape=4
-    bounding_box_regression_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box', activation='linear')(x)
+    bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box', activation='linear')(x)
     reshape_bbox = tf.keras.layers.Reshape(
         (num_classes, 4),  # Not hard-coded
         name='bounding_box'
-    )(bounding_box_regression_output)
+    )(bbox_reg_output)
     return reshape_bbox
 
 ###Define Classifier Layer
-def classifer(inputs, num_classes)->tf.keras.Model:
+def classifer(inputs, num_classes)->keras.Model:
     return tf.keras.layers.Dense(units=num_classes, activation='sigmoid', name = 'classification')(inputs)
 
-def final_model(input_shape:tuple, num_classes:int)->tf.keras.Model:
+def final_model(input_shape:tuple, num_classes:int)-> keras.Model:
     
     inputs = tf.keras.layers.Input(shape=input_shape)
 
@@ -53,6 +53,6 @@ def final_model(input_shape:tuple, num_classes:int)->tf.keras.Model:
 
     classification_output = classifer(dense_output, num_classes)
 
-    return tf.keras.Model(inputs=inputs, 
+    return keras.Model(inputs=inputs, 
                           outputs=[classification_output, 
                                    bounding_box_regression_output])

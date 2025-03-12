@@ -215,7 +215,7 @@ class AnnotationProcessor:
                 - A list of normalized bounding box coordinates for each object in the image.
         """
         uni_list = list(self.df['filename'].unique())
-        for image_name in uni_list[:100]:  # Iterate over unique images
+        for image_name in uni_list:#[:100]:  # Iterate over unique images
             image_path = str(image_dir/ image_name)  # Construct full image path
             try:
                 image_annotations = self.df[self.df['filename'] == image_name]  # Get annotations for this image
@@ -245,10 +245,6 @@ class AnnotationProcessor:
                 self.images.append(image_path)
                 self.class_ids.append(labels)
                 self.bboxes.append(np.array(cords))
-
-                    # Draw bounding box (optional, for visualization)
-                    # cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)  # Green box
-                    # cv2.putText(img, label, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
             except Exception as e:
                 print(f"Error processing image {image_name}: {e}")
