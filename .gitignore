@@ -175,3 +175,5 @@ kaggle.json
 datasets/*
 training_checkpoints/
 *.h5
+mlruns/
+output/

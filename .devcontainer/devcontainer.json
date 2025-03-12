@@ -64,7 +64,8 @@
 				"ms-toolsai.tensorboard",
 				"charliermarsh.ruff",
 				"VisualStudioExptTeam.vscodeintellicode",
-				"Codeium.codeium"
+				"Codeium.codeium",
+				"RSIP-Vision.nvidia-smi-plus"
 			]
 		}
 	},
