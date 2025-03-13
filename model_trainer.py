@@ -18,7 +18,7 @@ from tensorflow.keras import layers
 
 from utils import utils
 from utils.logs import get_logger
-from utils.prepare_dataset import AnnotationProcessor
+from data_handler.annotation_processor import AnnotationProcessor
 
 tf.random.set_seed(42)
 with initialize(version_base=None, config_path="conf"):
@@ -44,12 +44,7 @@ CLASS_NAME = [
 NUM_CLASSES = len(CLASS_NAME)
 class_map = {k: v for k, v in enumerate(CLASS_NAME)}
 
-data_augmentation = tf.keras.Sequential([
-    layers.RandomBrightness(0.1),
-    layers.RandomContrast(0.1),
-    layers.RandomSaturation(0.1),
-    layers.RandomHue(0.1)
-])
+
 
 def _prepare_ds(img_list, cls_id_list, bbx_list, is_train=False):
     padded_class_ids, padded_bbx = pad_cls_id_bbx(cls_id_list, bbx_list)

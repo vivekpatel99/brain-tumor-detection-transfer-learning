@@ -56,3 +56,14 @@ def final_model(input_shape:tuple, num_classes:int)-> keras.Model:
     return keras.Model(inputs=inputs, 
                           outputs=[classification_output, 
                                    bounding_box_regression_output])
+
+
+def resnet50_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
+    inputs = keras.layers.Input(shape=input_shape)
+
+    _feature_extractor = feature_extractor(inputs)
+    dense_output = dense_layers(_feature_extractor)
+    classification_output = classifer(dense_output, num_classes)
+
+    return keras.Model(inputs=inputs, 
+                          outputs=classification_output)
