@@ -4,8 +4,7 @@ import tensorflow as tf
 class Preprocessor:
     def __init__(self, dataset:tf.data.Dataset):
         self.dataset = dataset
-        self._rescale = tf.keras.layers.Rescaling(1./255)
-
+        
     def _resnet_preprocess(self, images, labels):
         processed_image = tf.keras.applications.resnet.preprocess_input(images)
         return processed_image, labels
