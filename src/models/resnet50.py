@@ -11,8 +11,8 @@ def feature_extractor(inputs)-> keras.Model:
         input_tensor=inputs
     )
     resnet50.trainable = True
-    for layer in resnet50.layers[:140]: #example number of layers to freeze
-        layer.trainable = False
+    # for layer in resnet50.layers[:140]: #example number of layers to freeze
+    #     layer.trainable = False
     feature_extractor = resnet50.output
     return feature_extractor
 
@@ -51,13 +51,13 @@ def final_model(input_shape:tuple, num_classes:int)-> keras.Model:
    
     dense_output = dense_layers(_feature_extractor)
 
-    bounding_box_regression_output = bounding_box_regression(dense_output, num_classes)
+    bbox_reg_output = bounding_box_regression(dense_output, num_classes)
 
     classification_output = classifer(dense_output, num_classes)
 
     return keras.Model(inputs=inputs, 
                           outputs=[classification_output, 
-                                   bounding_box_regression_output])
+                                   bbox_reg_output])
 
 
 def resnet50_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
@@ -73,7 +73,28 @@ def resnet50_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
     x = keras.layers.Dense(units=1024, activation='relu', kernel_regularizer='l2')(x)
     x = keras.layers.Dropout(0.5)(x)
     x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.5)(x)
     classification_output = classifer(x, num_classes)
 
     return keras.Model(inputs=inputs, 
                           outputs=classification_output)
+
+
+
+def resnet50_regressor(input_shape:tuple, num_classes:int)-> keras.Model:
+    inputs = keras.layers.Input(shape=input_shape)
+
+    _feature_extractor = feature_extractor(inputs)
+    # dense_output = dense_layers(_feature_extractor)
+    x = keras.layers.Conv2D(filters=256, kernel_size=(1, 1), activation='relu')(_feature_extractor) # 1x1 conv
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.GlobalAveragePooling2D()(x)
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dense(units=1024, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
+    bbox_reg_output = bounding_box_regression(x, num_classes)
+
+    return keras.Model(inputs=inputs, 
+                          outputs=bbox_reg_output)

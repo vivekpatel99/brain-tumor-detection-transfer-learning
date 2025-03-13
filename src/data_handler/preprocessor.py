@@ -10,6 +10,5 @@ class Preprocessor:
         return processed_image, labels
     
     def preprocess(self)-> tf.data.Dataset:
-        ds = self.dataset.map(self._resnet_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
-        # ds = ds.map(lambda x,y: (self._rescale(x), y), num_parallel_calls=tf.data.AUTOTUNE)
-        return ds
+        return self.dataset.map(self._resnet_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
+         
