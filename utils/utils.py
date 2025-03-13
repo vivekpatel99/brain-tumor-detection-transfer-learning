@@ -1,17 +1,18 @@
+import keras
 import tensorflow as tf
 
 
 def pad_cls_id_bbx(class_id_list, bbox_list):
-    padded_class_ids = tf.keras.preprocessing.sequence.pad_sequences(
+    padded_class_ids = keras.preprocessing.sequence.pad_sequences(
     class_id_list, padding='post', dtype='int32')
-    padded_bbx = tf.keras.preprocessing.sequence.pad_sequences(
+    padded_bbx = keras.preprocessing.sequence.pad_sequences(
         bbox_list, padding='post', dtype='float32')
     
     return padded_class_ids, padded_bbx
 
 def load_image(image_path):
     image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.decode_jpeg(image, channels=3)/255.
     return image
 
 def load_dataset(image, class_ids, bbox, NUM_CLASSES=3):
@@ -23,5 +24,5 @@ def load_dataset(image, class_ids, bbox, NUM_CLASSES=3):
     return  tf_image, (multi_hot, bbox)
 
 def preprocess(images, classes):
-    processed_image = tf.keras.applications.resnet.preprocess_input(images)
+    processed_image = keras.applications.resnet.preprocess_input(images)
     return processed_image, classes

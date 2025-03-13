@@ -110,10 +110,10 @@ def main():
                                             mode=mode,
                                             verbose=1),
                                             
-        tf.keras.callbacks.EarlyStopping(monitor=to_monitor, 
-                                        patience=10,
-                                        mode=mode, 
-                                        restore_best_weights=True),
+        # tf.keras.callbacks.EarlyStopping(monitor=to_monitor, 
+        #                                 patience=10,
+        #                                 mode=mode, 
+        #                                 restore_best_weights=True),
 
     ]
     model = resnet50.final_model(input_shape=(IMG_SIZE, IMG_SIZE,3), num_classes=NUM_CLASSES)
@@ -123,15 +123,6 @@ def main():
     loss={'classification': tf.keras.losses.BinaryCrossentropy(from_logits=False), 'bounding_box': tf.keras.losses.MeanSquaredError()},
     metrics={'classification': METRICS, 'bounding_box': 'mse'})  # Use IoU metric
    
-    # Get the length of the training set
-    length_of_training_dataset = len(train_images)
-    # Get the length of the validation set
-    length_of_validation_dataset = len(valid_images)
-    # Get the steps per epoch 
-    steps_per_epoch = math.ceil(length_of_training_dataset/BATCH_SIZE)
-    # get the validation steps (per epoch) 
-    validation_steps = math.ceil(length_of_validation_dataset/BATCH_SIZE)
-
     model.fit(
         train_ds,
         # steps_per_epoch=steps_per_epoch,
@@ -140,6 +131,7 @@ def main():
         # validation_steps=validation_steps,
         batch_size=BATCH_SIZE,
         callbacks=[callbacks],
+         verbose=1  
     )
 
 
