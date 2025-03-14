@@ -178,3 +178,5 @@ training_checkpoints/
 mlruns/
 output/
 _datasets/*
+*.json
+

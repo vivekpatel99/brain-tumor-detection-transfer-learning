@@ -33,7 +33,7 @@ class DataLoader:
     def load_dataset(self, image, class_ids, bbox):
         tf_image = self.load_image(image)
         # multi_hot = tf.reduce_max(tf.one_hot(tf.cast(class_ids, tf.int32), self.num_classes), axis=0 )  # Shape: (NUM_CLASSES,)
-        return  tf_image, class_ids  #(multi_hot, bbox)
+        return  tf_image, bbox #(class_ids , bbox)
         # return  tf_image,  {'classes': multi_hot, 'boxes': tf.cast(bbox, tf.float32)}
     
     def _common_loader(self)->tf.data.Dataset:
