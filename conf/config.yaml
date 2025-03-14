@@ -1,7 +1,8 @@
 
 DATASET:
   DATASET_DIR: 'datasets'
-  DATASET_NAME: 'brain-tumor-2'
+  # DATASET_NAME: 'brain-tumor-2'
+  DATASET_NAME: '-Brain-Tumor-Detection-2'
   ANNOTATION_FILE_NAME: '_annotations.csv'
   BONE_FRACTURE_DETECTION_DATASET_URL: 'https://universe.roboflow.com/roboflow-100/brain-tumor-m2pbp/dataset/2#'
 
@@ -13,7 +14,7 @@ DATASET_DIRS:
 TRAIN:
   BATCH_SIZE: 32
   NUM_EPOCHS: 50
-  LEARNING_RATE: 1e-5
+  LEARNING_RATE: 1e-4
   IMG_SIZE: 240
 
 OUTPUTS:

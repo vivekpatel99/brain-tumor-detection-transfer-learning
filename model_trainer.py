@@ -5,7 +5,7 @@ from pathlib import Path
 import mlflow
 from dotenv import load_dotenv
 
-from src.models import resnet50
+from models import resnet101
 from utils.utils import pad_cls_id_bbx
 
 load_dotenv()
@@ -111,7 +111,7 @@ def main():
         #                                 restore_best_weights=True),
 
     ]
-    model = resnet50.final_model(input_shape=(IMG_SIZE, IMG_SIZE,3), num_classes=NUM_CLASSES)
+    model = resnet101.final_model(input_shape=(IMG_SIZE, IMG_SIZE,3), num_classes=NUM_CLASSES)
 
     optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE)
     model.compile(optimizer=optimizer,

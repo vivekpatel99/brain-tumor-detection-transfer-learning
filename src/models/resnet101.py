@@ -1,19 +1,28 @@
 import keras
 import tensorflow as tf
-from seaborn import xkcd_rgb
 
 
 ### Define ResNet50 as a Feature Extractor
 def feature_extractor(inputs)-> keras.Model:
-    resnet50 = tf.keras.applications.ResNet50(
+    resnet101 = tf.keras.applications.ResNet101(
         include_top = False, 
         weights = "imagenet",    
         input_tensor=inputs
     )
-    resnet50.trainable = True
-    # for layer in resnet50.layers[:140]: #example number of layers to freeze
-    #     layer.trainable = False
-    feature_extractor = resnet50.output
+    resnet101.trainable = True
+    # Determine the number of layers to unfreeze dynamically
+    total_layers = len(resnet101.layers)
+    unfreeze_percentage = 0.5  # unfreezing 50% of the layers
+    layers_to_unfreeze = int(total_layers * unfreeze_percentage)
+    
+    # Unfreeze the last 'layers_to_unfreeze' layers
+    for layer in resnet101.layers[:total_layers - layers_to_unfreeze]:
+        layer.trainable = False
+
+    print(f"Total layers in ResNet101: {total_layers}")
+    print(f"Unfreezing the last {layers_to_unfreeze} layers ({unfreeze_percentage*100:.0f}% of total layers)")
+    
+    feature_extractor = resnet101.output
     return feature_extractor
 
 
@@ -40,8 +49,10 @@ def bounding_box_regression(x, num_classes:int)->keras.Layer:
     return reshape_bbox
 
 ###Define Classifier Layer
-def classifer(inputs, num_classes)->keras.Model:
-    return tf.keras.layers.Dense(units=num_classes, activation='sigmoid', name = 'classification')(inputs)
+def classifer(inputs, num_classes, l2_reg=0.01)->keras.Model:
+    return tf.keras.layers.Dense(units=num_classes, activation='sigmoid', 
+                                 kernel_regularizer=tf.keras.regularizers.l2(l2_reg), 
+                                 name = 'classification')(inputs)
 
 def final_model(input_shape:tuple, num_classes:int)-> keras.Model:
     
@@ -60,19 +71,12 @@ def final_model(input_shape:tuple, num_classes:int)-> keras.Model:
                                    bbox_reg_output])
 
 
-def resnet50_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
+def resnet101_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
     inputs = keras.layers.Input(shape=input_shape)
 
     _feature_extractor = feature_extractor(inputs)
-    # dense_output = dense_layers(_feature_extractor)
-    x = keras.layers.Conv2D(filters=256, kernel_size=(1, 1), activation='relu')(_feature_extractor) # 1x1 conv
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.GlobalAveragePooling2D()(x)
-    x = keras.layers.Flatten()(x)
-    x = keras.layers.Dropout(0.5)(x)
-    x = keras.layers.Dense(units=1024, activation='relu', kernel_regularizer='l2')(x)
-    x = keras.layers.Dropout(0.5)(x)
-    x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.GlobalAveragePooling2D()(_feature_extractor)
+    x = keras.layers.Dense(1024, activation='relu')(x)
     x = keras.layers.Dropout(0.5)(x)
     classification_output = classifer(x, num_classes)
 
@@ -81,19 +85,11 @@ def resnet50_classifier(input_shape:tuple, num_classes:int)-> keras.Model:
 
 
 
-def resnet50_regressor(input_shape:tuple, num_classes:int)-> keras.Model:
+def resnet101_regressor(input_shape:tuple, num_classes:int)-> keras.Model:
     inputs = keras.layers.Input(shape=input_shape)
 
     _feature_extractor = feature_extractor(inputs)
-    # dense_output = dense_layers(_feature_extractor)
-    x = keras.layers.Conv2D(filters=256, kernel_size=(1, 1), activation='relu')(_feature_extractor) # 1x1 conv
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.GlobalAveragePooling2D()(x)
-    x = keras.layers.Flatten()(x)
-    x = keras.layers.Dropout(0.5)(x)
-    x = keras.layers.Dense(units=1024, activation='relu', kernel_regularizer='l2')(x)
-    x = keras.layers.Dropout(0.5)(x)
-    x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.GlobalAveragePooling2D()(_feature_extractor)
     bbox_reg_output = bounding_box_regression(x, num_classes)
 
     return keras.Model(inputs=inputs, 
