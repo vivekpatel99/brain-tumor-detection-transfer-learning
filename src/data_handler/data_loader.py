@@ -17,8 +17,6 @@ class DataLoader:
             layers.RandomContrast(0.3, seed=42),
             layers.RandomSaturation(0.3, seed=42),
             layers.RandomHue(0.3, seed=42),
-            layers.RandomZoom(height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2), seed=42),
-            layers.RandomTranslation(height_factor=(-0.1, 0.1), width_factor=(-0.1, 0.1), seed=42),
         ])
 
     
