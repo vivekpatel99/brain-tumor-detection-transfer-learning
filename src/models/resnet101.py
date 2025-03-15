@@ -37,7 +37,8 @@ def dense_layers(features)-> keras.Layer:
 ### Define Bounding Box Regression
 def bounding_box_regression(x, num_classes:int)->keras.Layer:
     bbox_shape=4
-    bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box', activation='linear')(x)
+    # Add sigmoid activation to ensure output is between 0 and 1
+    bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box', activation='sigmoid')(x)
     reshape_bbox = tf.keras.layers.Reshape(
         (num_classes, 4),  # Not hard-coded
         name='bounding_box'
