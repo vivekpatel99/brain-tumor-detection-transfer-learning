@@ -4,9 +4,9 @@ import cv2
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
+import tensorflow as tf
 from sklearn import metrics
 
-from utils.bounding_box_funcs import convert_coordinates_for_plot
 
 
 def plot_random_images_bbox(*, image_paths:np.ndarray, class_ids:np.ndarray, bboxes:np.ndarray, class_map:dict, NUM_IMAGES_DISPLAY:int=9) -> None:

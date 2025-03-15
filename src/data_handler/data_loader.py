@@ -29,6 +29,8 @@ class DataLoader:
         return image
 
     def load_dataset(self, image, class_ids, bbox):
+        """ x_min, y_min, x_max, y_max
+        """
         tf_image = self.load_image(image)
         # multi_hot = tf.reduce_max(tf.one_hot(tf.cast(class_ids, tf.int32), self.num_classes), axis=0 )  # Shape: (NUM_CLASSES,)
         return  tf_image, bbox #(class_ids , bbox)

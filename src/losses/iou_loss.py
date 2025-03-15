@@ -1,7 +1,74 @@
 import tensorflow as tf
 
 
+def find_zero_row_indices(arr):
+    """
+    Finds the indices of rows that are all zeros in a TensorFlow tensor.
+
+    Args:
+        arr: The TensorFlow tensor.
+
+    Returns:
+        A TensorFlow tensor of indices where the rows are all zeros.
+    """
+    all_zero_rows = tf.reduce_all(arr == 0, axis=1) #  find all rows that are all zeros
+    zero_row_indices = tf.where(all_zero_rows)[:, 0]  # Get indices from tf.where
+    return zero_row_indices
+
+def drop_rows_by_indices(arr, indices_to_drop):
+    """
+    Drops rows from a TensorFlow tensor based on the given indices.
+
+    Args:
+        arr: The TensorFlow tensor.
+        indices_to_drop: A TensorFlow tensor of indices to drop.
+
+    Returns:
+        A new TensorFlow tensor with the specified rows removed.
+    """
+    # Create a boolean mask where True means "keep" and False means "drop"
+    mask = tf.ones(tf.shape(arr)[0], dtype=tf.bool)
+    
+    # Use tf.tensor_scatter_nd_update to set the mask to False at the specified indices
+    updates = tf.fill(tf.shape(indices_to_drop), False) # create a vector of False
+    indices = tf.expand_dims(indices_to_drop, axis=1) # add a dimension
+    mask = tf.tensor_scatter_nd_update(mask, indices, updates) # set the mask to False
+
+    # Use boolean indexing to select the rows to keep
+    return tf.boolean_mask(arr, mask)
+
+
 def iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size, 4)
+    """x_min, y_min, x_max, y_max
+    """
+    y_true_zero_indices= find_zero_row_indices(y_true)
+    y_true = drop_rows_by_indices(y_true, y_true_zero_indices)
+    y_pred = drop_rows_by_indices(y_pred, y_true_zero_indices)
+
+    x_min_true = y_true[..., 0]
+    y_min_true = y_true[..., 1]
+    x_max_true = y_true[..., 2]
+    y_max_true = y_true[..., 3]
+
+    x_min_pred = y_pred[..., 0]
+    y_min_pred = y_pred[..., 1]
+    x_max_pred = y_pred[..., 2]
+    y_max_pred = y_pred[..., 3]
+
+    area_true = (x_max_true - x_min_true) * (y_max_true - y_min_true)
+    area_pred = (x_max_pred - x_min_pred) * (y_max_pred - y_min_pred)
+
+    x_intersect = tf.maximum(x_min_true, x_min_pred)
+    y_intersect = tf.maximum(y_min_true, y_min_pred)
+    x_max_intersect = tf.minimum(x_max_true, x_max_pred)
+    y_max_intersect = tf.minimum(y_max_true, y_max_pred)
+
+    area_intersect = tf.maximum(0.0, x_max_intersect - x_intersect) * tf.maximum(0.0, y_max_intersect - y_intersect) # avoid negative values
+    iou = area_intersect / (area_true + area_pred - area_intersect + 1e-7)  # Add small epsilon for numerical stability
+    return 1.0 - iou  # We want to *minimize* the loss
+
+
+def old_iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size, 4)
     # y_true = y_true[0]
     # y_pred = tf.reshape(y_pred, ( 3, 4))
     y_true = tf.cast(y_true, dtype=tf.float32) # Cast to float32
