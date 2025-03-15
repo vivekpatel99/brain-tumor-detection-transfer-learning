@@ -12,6 +12,7 @@ class DataLoader:
         self.bbx_list = bbx_list
         self.num_classes = num_classes
         self.multi_hot_class_ids = None
+        self.padded_bbx= None      
         self.data_augmentation = tf.keras.Sequential([
             layers.RandomBrightness(0.3, seed=42), # seed can be added for reproducibility
             layers.RandomContrast(0.3, seed=42),
@@ -37,9 +38,9 @@ class DataLoader:
         # return  tf_image,  {'classes': multi_hot, 'boxes': tf.cast(bbox, tf.float32)}
     
     def _common_loader(self)->tf.data.Dataset:
-        padded_bbx = self.pad_bbx()
+        self.padded_bbx = self.pad_bbx()
         self.multi_hot_class_ids = self.create_multi_hot()
-        datasets = tf.data.Dataset.from_tensor_slices((self.img_list, self.multi_hot_class_ids, padded_bbx))
+        datasets = tf.data.Dataset.from_tensor_slices((self.img_list, self.multi_hot_class_ids, self.padded_bbx))
         ds = datasets.map(self.load_dataset, num_parallel_calls=tf.data.AUTOTUNE) 
         return ds
     

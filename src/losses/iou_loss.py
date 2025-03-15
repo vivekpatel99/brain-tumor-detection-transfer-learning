@@ -1,3 +1,4 @@
+from matplotlib import axis
 import tensorflow as tf
 
 
@@ -41,9 +42,12 @@ def drop_rows_by_indices(arr, indices_to_drop):
 def iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size, 4)
     """x_min, y_min, x_max, y_max
     """
-    y_true_zero_indices= find_zero_row_indices(y_true)
-    y_true = drop_rows_by_indices(y_true, y_true_zero_indices)
-    y_pred = drop_rows_by_indices(y_pred, y_true_zero_indices)
+    y_true = tf.cast(y_true, dtype=tf.float32) # Cast to float32
+    y_pred = tf.cast(y_pred, dtype=tf.float32) # Cast to float32
+
+    # Create a mask for valid bounding boxes
+    mask = tf.reduce_any(tf.not_equal(y_true, 0), axis=-1)
+    mask = tf.cast(mask, dtype=tf.float32)
 
     x_min_true = y_true[..., 0]
     y_min_true = y_true[..., 1]
@@ -65,7 +69,8 @@ def iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size, 4)
 
     area_intersect = tf.maximum(0.0, x_max_intersect - x_intersect) * tf.maximum(0.0, y_max_intersect - y_intersect) # avoid negative values
     iou = area_intersect / (area_true + area_pred - area_intersect + 1e-7)  # Add small epsilon for numerical stability
-    return 1.0 - iou  # We want to *minimize* the loss
+    loss = tf.boolean_mask(iou, mask)
+    return 1- loss 
 
 
 def old_iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size, 4)
@@ -97,29 +102,68 @@ def old_iou_loss(y_true, y_pred):  # Assuming y_true and y_pred are (batch_size,
     return 1.0 - iou  # We want to *minimize* the loss
 
 def iou_metric(y_true, y_pred):  # No negation for metric
-    # y_true = y_true[0]
-    # y_pred = tf.reshape(y_pred, (3, 4))
     y_true = tf.cast(y_true, dtype=tf.float32) # Cast to float32
     y_pred = tf.cast(y_pred, dtype=tf.float32) # Cast to float32
+    
+    # Create a mask for valid bounding boxes
+    mask = tf.reduce_any(tf.not_equal(y_true, 0), axis=-1)
+    mask = tf.cast(mask, dtype=tf.float32)
 
-    x_true = y_true[..., 0]
-    y_true_ = y_true[..., 1]
+    x_min_true = y_true[..., 0]
+    y_min_true = y_true[..., 1]
     x_max_true = y_true[..., 2]
     y_max_true = y_true[..., 3]
 
-    x_pred = y_pred[..., 0]
-    y_pred_ = y_pred[..., 1]
+    x_min_pred = y_pred[..., 0]
+    y_min_pred = y_pred[..., 1]
     x_max_pred = y_pred[..., 2]
     y_max_pred = y_pred[..., 3]
 
-    area_true = (x_max_true - x_true) * (y_max_true - y_true_)
-    area_pred = (x_max_pred - x_pred) * (y_max_pred - y_pred_)
+    area_true = (x_max_true - x_min_true) * (y_max_true - y_min_true)
+    area_pred = (x_max_pred - x_min_pred) * (y_max_pred - y_min_pred)
 
-    x_intersect = tf.maximum(x_true, x_pred)
-    y_intersect = tf.maximum(y_true_, y_pred_)
+    x_intersect = tf.maximum(x_min_true, x_min_pred)
+    y_intersect = tf.maximum(y_min_true, y_min_pred)
     x_max_intersect = tf.minimum(x_max_true, x_max_pred)
     y_max_intersect = tf.minimum(y_max_true, y_max_pred)
 
     area_intersect = tf.maximum(0.0, x_max_intersect - x_intersect) * tf.maximum(0.0, y_max_intersect - y_intersect) # avoid negative values
     iou = area_intersect / (area_true + area_pred - area_intersect + 1e-7)  # Add small epsilon for numerical stability
+    iou = tf.boolean_mask(iou, mask, axis=0)
     return iou  # Return IoU directly for metric
+
+
+def giou_loss(y_true, y_pred):
+    y_true = tf.cast(y_true, dtype=tf.float32)
+    y_pred = tf.cast(y_pred, dtype=tf.float32)
+    
+    # Assuming y_true and y_pred are (batch_size, num_classes, 4)
+    
+    # Create a mask for valid bounding boxes
+    mask = tf.reduce_any(tf.not_equal(y_true, 0), axis=-1)
+    mask = tf.cast(mask, dtype=tf.float32)
+    
+    # Calculate IoU
+    intersect_mins = tf.maximum(y_true[..., :2], y_pred[..., :2])
+    intersect_maxes = tf.minimum(y_true[..., 2:], y_pred[..., 2:])
+    intersect_wh = tf.maximum(intersect_maxes - intersect_mins, 0.)
+    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+    
+    true_area = (y_true[..., 2] - y_true[..., 0]) * (y_true[..., 3] - y_true[..., 1])
+    pred_area = (y_pred[..., 2] - y_pred[..., 0]) * (y_pred[..., 3] - y_pred[..., 1])
+    
+    union_area = true_area + pred_area - intersect_area
+    iou = intersect_area / (union_area + 1e-7)
+    
+    # Calculate GIoU
+    enclose_mins = tf.minimum(y_true[..., :2], y_pred[..., :2])
+    enclose_maxes = tf.maximum(y_true[..., 2:], y_pred[..., 2:])
+    enclose_wh = tf.maximum(enclose_maxes - enclose_mins, 0.)
+    enclose_area = enclose_wh[..., 0] * enclose_wh[..., 1]
+    
+    giou = iou - (enclose_area - union_area) / (enclose_area + 1e-7)
+    loss = 1 - giou
+    
+    # Apply mask and calculate mean loss
+    masked_loss = loss * mask
+    return tf.reduce_sum(masked_loss) / (tf.reduce_sum(mask) + 1e-7)
