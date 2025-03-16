@@ -2,10 +2,14 @@ import random
 
 import cv2
 import matplotlib.pyplot as plt
-import mlflow
 import numpy as np
 import tensorflow as tf
 from sklearn import metrics
+
+try:
+    from src.losses.iou_loss import iou_metric
+except ImportError:
+    from losses.iou_loss import iou_metric
 
 
 
@@ -102,7 +106,7 @@ def visualize_training_results(history):
     plt.tight_layout() #prevents overlapping titles/labels
     plt.show()
 
-def plot_auc_curve(cfg, class_name_list, y_true, y_prob_pred):
+def plot_auc_curve(output_dir, class_name_list, y_true, y_prob_pred):
     auc_roc_values = []
     fig, axs = plt.subplots(1)
     for i in range(len(class_name_list)):
@@ -118,10 +122,35 @@ def plot_auc_curve(cfg, class_name_list, y_true, y_prob_pred):
             axs.set_xlabel('False Positive Rate')
             axs.set_ylabel('True Positive Rate')
             axs.legend(loc='lower right')
-        except:
+        except Exception as e:
             print(
             f"Error in generating ROC curve for {class_name_list[i]}. "
             f"Dataset lacks enough examples."
+            f"{e}"
         )
-    plt.savefig(f"{cfg.OUTPUTS.OUPUT_DIR}/ROC-Curve.png")
-    mlflow.log_figure(fig, 'ROC-Curve.png')
+    plt.savefig(f"{output_dir}/ROC-Curve.png")
+    return fig
+    
+
+def plot_iou_histogram(output_dir, y_true_bbox, y_pred_bbox, class_ids):
+    """
+    Plots a histogram of Intersection over Union (IoU) scores.
+
+    Args:
+        y_true_bbox: Ground truth bounding boxes (list of lists or numpy array).
+        y_pred_bbox: Predicted bounding boxes (list of lists or numpy array).
+        class_ids: list of class ids.
+    """
+    fig, axs = plt.subplots(1)
+
+    iou_scores = iou_metric(y_true_bbox, y_pred_bbox)
+
+    # fig.figure(figsize=(10, 6))
+    axs.hist(iou_scores, bins=20, range=(0, 1), edgecolor='black')
+    axs.set_title('IoU Score Distribution')
+    axs.set_xlabel('IoU Score')
+    axs.set_ylabel('Frequency')
+    axs.grid(True)
+    plt.show()
+    plt.savefig(f"{output_dir}/iou_histogram.png")
+    return fig   

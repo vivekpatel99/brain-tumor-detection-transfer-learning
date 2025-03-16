@@ -1,8 +1,9 @@
+import keras
 import numpy as np
 import tensorflow.keras.backend as K
 
 
-def compute_class_weights(labels):
+def compute_class_weights(labels) -> tuple[np.ndarray, np.ndarray]:
     """
     Note: Imported from the AI for Medicine Specialization course on Coursera: Assignment 1 Week 1.
     Compute positive and negative weights for each class.
@@ -25,9 +26,9 @@ def compute_class_weights(labels):
     positive_weights = negative_frequencies
     negative_weights = positive_frequencies
 
-    return positive_weights, negative_weights
+    return (positive_weights, negative_weights)
 
-
+@keras.saving.register_keras_serializable()
 def set_binary_crossentropy_weighted_loss(positive_weights, negative_weights, epsilon=1e-7):
     """
     Note: Imported from the AI for Medicine Specialization course on Coursera: Assignment 1 Week 1.
