@@ -37,7 +37,7 @@ def iou_loss(y_true, y_pred) -> float:  # Assuming y_true and y_pred are (batch_
     return 1- loss 
 
 
-
+@keras.saving.register_keras_serializable()
 def iou_metric(y_true, y_pred) -> float:  # No negation for metric
     y_true = tf.cast(y_true, dtype=tf.float32) # Cast to float32
     y_pred = tf.cast(y_pred, dtype=tf.float32) # Cast to float32

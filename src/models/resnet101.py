@@ -30,7 +30,7 @@ def feature_extractor(inputs)-> keras.Model:
 def dense_layers(features)-> keras.Layer:
     x = keras.layers.GlobalAveragePooling2D()(features)
     x = keras.layers.Dense(1024, activation='relu')(x)
-    x = keras.layers.Dropout(0.5)(x)
+    x = keras.layers.Dropout(0.3)(x)
     x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
     return x
 

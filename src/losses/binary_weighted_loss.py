@@ -41,6 +41,7 @@ def set_binary_crossentropy_weighted_loss(positive_weights, negative_weights, ep
     Returns:
       weighted_loss (function): weighted loss function
     """
+    @keras.saving.register_keras_serializable()
     def binary_crossentropy_weighted_loss(y_true, y_pred):
         """
         Returns weighted binary cross entropy loss value.

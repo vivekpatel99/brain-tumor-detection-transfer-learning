@@ -5,7 +5,7 @@ class Preprocessor:
     def __init__(self, dataset:tf.data.Dataset):
         self.dataset = dataset
         
-    def _resnet_preprocess(self, images, labels):
+    def _resnet_preprocess(self, images, labels)-> tuple[tf.Tensor, tf.Tensor]:
         processed_image = tf.keras.applications.resnet.preprocess_input(images)
         return processed_image, labels
 
