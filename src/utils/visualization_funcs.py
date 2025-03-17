@@ -102,7 +102,7 @@ def visualize_training_results(history):
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
         plt.legend()
-
+    plt.grid()
     plt.tight_layout() #prevents overlapping titles/labels
     plt.show()
 

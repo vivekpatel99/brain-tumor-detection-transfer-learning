@@ -102,10 +102,10 @@ def main() -> None:
         model = final_model(input_shape=(IMG_SIZE, IMG_SIZE, 3), num_classes=NUM_CLASSES)
         model.compile(
             optimizer=optimizer,
-                loss_weights={
-                    'classification': 0.5,  # Example: Reduce weight for classification
-                    'bounding_box': 0.5     # Example: Increase weight for regression
-                },
+                # loss_weights={
+                #     'classification': 0.5,  # Example: Reduce weight for classification
+                #     'bounding_box': 0.5     # Example: Increase weight for regression
+                # },
             loss={'classification': _loss.set_binary_crossentropy_weighted_loss(positive_weights, negative_weights),
                 'bounding_box': iou_loss.iou_loss},
             metrics={'classification': CLS_METRICS, 

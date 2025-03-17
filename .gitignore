@@ -180,3 +180,4 @@ output/
 _datasets/*
 *.json
 
+logs/*

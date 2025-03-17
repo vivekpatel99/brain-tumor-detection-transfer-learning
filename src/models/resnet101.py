@@ -12,7 +12,7 @@ def feature_extractor(inputs)-> keras.Model:
     resnet101.trainable = True
     # Determine the number of layers to unfreeze dynamically
     total_layers = len(resnet101.layers)
-    unfreeze_percentage = 0.5  # unfreezing 50% of the layers
+    unfreeze_percentage = 0.3  # unfreezing 30% of the layers
     layers_to_unfreeze = int(total_layers * unfreeze_percentage)
     
     # Unfreeze the last 'layers_to_unfreeze' layers
@@ -29,21 +29,27 @@ def feature_extractor(inputs)-> keras.Model:
 ### Define Dense Layers
 def dense_layers(features)-> keras.Layer:
     x = keras.layers.GlobalAveragePooling2D()(features)
-    x = keras.layers.Dense(1024, activation='relu')(x)
-    x = keras.layers.Dropout(0.3)(x)
+    x = keras.layers.Dense(1024, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.5)(x)
     x = keras.layers.Dense(units=512, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.3)(x)
     return x
 
 ### Define Bounding Box Regression
 def bounding_box_regression(x, num_classes:int)->keras.Layer:
     bbox_shape=4
+    x = keras.layers.Dense(1024, activation='relu')(x)
+    x = keras.layers.Dropout(0.3)(x)
+    x = keras.layers.Dense(units=256, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.2)(x)
+    x = keras.layers.Dense(units=128, activation='relu', kernel_regularizer='l2')(x)
+    x = keras.layers.Dropout(0.2)(x)
+    x = keras.layers.Dense(units=64, activation='relu', kernel_regularizer='l2')(x)
+    # x = keras.layers.Dropout(0.3)(x)
+    
     # Add sigmoid activation to ensure output is between 0 and 1
     bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box', activation='sigmoid')(x)
-    reshape_bbox = tf.keras.layers.Reshape(
-        (num_classes, 4),  # Not hard-coded
-        name='bounding_box'
-    )(bbox_reg_output)
-    return reshape_bbox
+    return tf.keras.layers.Reshape((num_classes, 4), name='bounding_box')(bbox_reg_output)
 
 ###Define Classifier Layer
 def classifer(inputs, num_classes, l2_reg=0.01)->keras.Model:
@@ -87,8 +93,7 @@ def resnet101_regressor(input_shape:tuple, num_classes:int)-> keras.Model:
 
     _feature_extractor = feature_extractor(inputs)
     x = keras.layers.GlobalAveragePooling2D()(_feature_extractor)
-    x = keras.layers.Dense(1024, activation='relu')(x)
-    x = keras.layers.Dropout(0.5)(x)
+
     bbox_reg_output = bounding_box_regression(x, num_classes)
 
     return keras.Model(inputs=inputs, 
