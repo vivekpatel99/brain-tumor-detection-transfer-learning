@@ -38,13 +38,14 @@ def dense_layers(features)-> keras.Layer:
 ### Define Bounding Box Regression
 def bounding_box_regression(x, num_classes:int)->keras.Layer:
     bbox_shape=4
-    x = keras.layers.Dense(1024, activation='relu')(x)
-    x = keras.layers.Dropout(0.3)(x)
-    x = keras.layers.Dense(units=256, activation='relu', kernel_regularizer='l2')(x)
-    x = keras.layers.Dropout(0.2)(x)
-    x = keras.layers.Dense(units=128, activation='relu', kernel_regularizer='l2')(x)
-    x = keras.layers.Dropout(0.2)(x)
-    x = keras.layers.Dense(units=64, activation='relu', kernel_regularizer='l2')(x)
+    # units= 1024
+    # x = keras.layers.Dense(units, activation='relu', kernel_regularizer='l2')(x)
+    # x = keras.layers.Dropout(0.5)(x)
+    # x = keras.layers.Dense(units=units//2, activation='relu', kernel_regularizer='l2')(x)
+    # x = keras.layers.Dropout(0.3)(x)u
+    # x = keras.layers.Dense(units=units//3, activation='relu', kernel_regularizer='l2')(x)
+    # x = keras.layers.Dropout(0.3)(x)
+    # x = keras.layers.Dense(units=units//4, activation='relu', kernel_regularizer='l2')(x)
     # x = keras.layers.Dropout(0.3)(x)
     
     # Add sigmoid activation to ensure output is between 0 and 1
@@ -92,9 +93,10 @@ def resnet101_regressor(input_shape:tuple, num_classes:int)-> keras.Model:
     inputs = keras.layers.Input(shape=input_shape)
 
     _feature_extractor = feature_extractor(inputs)
-    x = keras.layers.GlobalAveragePooling2D()(_feature_extractor)
+    dense_output = dense_layers(_feature_extractor)
 
-    bbox_reg_output = bounding_box_regression(x, num_classes)
+
+    bbox_reg_output = bounding_box_regression(dense_output, num_classes)
 
     return keras.Model(inputs=inputs, 
                           outputs=bbox_reg_output)

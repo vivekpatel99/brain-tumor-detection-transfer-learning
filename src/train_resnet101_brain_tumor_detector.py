@@ -84,7 +84,7 @@ def main() -> None:
     callbacks = get_callbacks(to_monitor, mode)
 
     # ### Define Optimizer
-    optimizer=tf.keras.optimizers.AdamW(learning_rate=LEARNING_RATE)
+    optimizer=tf.keras.optimizers.AdamW(learning_rate=LEARNING_RATE,global_clipnorm=1.0)
 
     padded_class_ids = train_dl.multi_hot_class_ids
     positive_weights, negative_weights = _loss.compute_class_weights(padded_class_ids)
@@ -163,29 +163,66 @@ def get_metrics() -> tuple[list, list]:
         tf.keras.metrics.F1Score(name='f1_score',average='weighted')]
     REG_METRICS = [
         iou_loss.iou_metric,
-        tf.keras.metrics.MeanSquaredError(name='mse'),
-        tf.keras.metrics.MeanAbsoluteError(name='mae')]
+        tf.keras.metrics.MeanSquaredError(name='mse')]
         
     return CLS_METRICS,REG_METRICS
 
 def get_callbacks(to_monitor, mode) -> list:
-    return [tf.keras.callbacks.ReduceLROnPlateau(factor=0.1, 
-                                                patience=5, 
-                                                monitor=to_monitor,
-                                                mode=mode,
-                                                min_lr=1e-7,
-                                                verbose=1),
-        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(str(CHECK_POINT_DIR), "detector_ckpt_{epoch}.keras") ,
-                                            save_weights_only=False,
-                                            save_best_only=True,
-                                            monitor=to_monitor,
-                                            mode=mode,
-                                            verbose=1),                                 
-        tf.keras.callbacks.EarlyStopping(monitor=to_monitor, 
-                                        patience=10,
-                                        mode=mode, 
-                                        restore_best_weights=True,
-                                        verbose=1)]
+    # to_monitor = 'val_iou_metric'
+    # mode = 'max'
+    return [
+        # Learning Rate Scheduler
+        tf.keras.callbacks.ReduceLROnPlateau(
+            monitor=to_monitor,
+            factor=0.2,  # Less aggressive reduction
+            patience=5,
+            mode=mode,
+            min_lr=1e-6,  # Higher minimum learning rate
+            verbose=1
+        ),
+        
+        # Model Checkpoint
+        tf.keras.callbacks.ModelCheckpoint(
+            filepath=os.path.join(CHECK_POINT_DIR, "detector_ckpt_{epoch}.keras"),
+            save_weights_only=False,
+            save_best_only=True,
+            monitor=to_monitor,
+            mode=mode,
+            verbose=1
+        ),
+        
+        # Early Stopping
+        tf.keras.callbacks.EarlyStopping(
+            monitor=to_monitor,
+            patience=15,  # Allow 3 LR reductions before stopping
+            mode=mode,
+            restore_best_weights=True,
+            verbose=1
+        ),
+        
+        # Additional Recommendation
+        tf.keras.callbacks.TensorBoard(
+            log_dir='logs',
+            histogram_freq=1  # Track gradients/weights
+        )]
+
+    # return [tf.keras.callbacks.ReduceLROnPlateau(factor=0.1, 
+    #                                             patience=5, 
+    #                                             monitor=to_monitor,
+    #                                             mode=mode,
+    #                                             min_lr=1e-7,
+    #                                             verbose=1),
+    #     tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(str(CHECK_POINT_DIR), "detector_ckpt_{epoch}.keras") ,
+    #                                         save_weights_only=False,
+    #                                         save_best_only=True,
+    #                                         monitor=to_monitor,
+    #                                         mode=mode,
+    #                                         verbose=1),                                 
+    #     tf.keras.callbacks.EarlyStopping(monitor=to_monitor, 
+    #                                     patience=10,
+    #                                     mode=mode, 
+    #                                     restore_best_weights=True,
+    #                                     verbose=1)]
                                         
 def get_test_ds()-> tuple[tf.data.Dataset, None | np.ndarray, None | np.ndarray]:
     prepare_test_dataset = AnnotationProcessor(annotation_file= str(TEST_DIR/'_annotations.csv'))
