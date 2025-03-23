@@ -17,5 +17,3 @@ dependencies = [
     "tensorflow[and-cuda]>=2.18.0",
 ]
 
-[tool.uv.sources]
-imgaug = { git = "https://github.com/aleju/imgaug.git" }

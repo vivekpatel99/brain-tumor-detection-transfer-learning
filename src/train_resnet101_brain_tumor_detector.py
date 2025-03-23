@@ -26,7 +26,7 @@ from data_handler.data_loader import DataLoader
 from data_handler.preprocessor import Preprocessor
 from losses import binary_weighted_loss as _loss
 from losses import iou_loss
-from models.resnet101 import final_model
+from models.resnet101V2 import final_model
 from utils.logs import get_logger
 from utils.visualization_funcs import plot_auc_curve, plot_iou_histogram
 
@@ -61,8 +61,8 @@ def main() -> None:
     log = get_logger(__name__)
     # to_monitor = 'val_classification_AUC'
     # mode = 'max'
-    to_monitor = 'val_bounding_box_iou_metric'
-    mode = 'max'
+    to_monitor = 'val_bounding_box_mse' #'val_bounding_box_iou_metric'
+    mode = 'min'
 
     found_gpu = tf.config.list_physical_devices('GPU')
     if not found_gpu:
@@ -102,14 +102,15 @@ def main() -> None:
         model = final_model(input_shape=(IMG_SIZE, IMG_SIZE, 3), num_classes=NUM_CLASSES)
         model.compile(
             optimizer=optimizer,
-                # loss_weights={
-                #     'classification': 0.5,  # Example: Reduce weight for classification
-                #     'bounding_box': 0.5     # Example: Increase weight for regression
-                # },
+                loss_weights={
+                    'classification': 0.1,  # Example: Reduce weight for classification
+                    'bounding_box': 0.9     # Example: Increase weight for regression
+                },
             loss={'classification': _loss.set_binary_crossentropy_weighted_loss(positive_weights, negative_weights),
+                  # 'bounding_box': 'mse'},
                 'bounding_box': iou_loss.iou_loss},
             metrics={'classification': CLS_METRICS, 
-                    'bounding_box': REG_METRICS})
+                     'bounding_box': REG_METRICS})
 
         #  Train and Validate the model
         model.fit(
