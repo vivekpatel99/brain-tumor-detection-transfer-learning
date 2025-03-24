@@ -24,6 +24,7 @@ def feature_extractor(inputs)-> keras.Model:
 def bounding_box_regression(feature_extr, num_classes:int)->keras.Layer:
     bbox_shape=4
     loc_branch = keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(feature_extr)
+    loc_branch = keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(loc_branch)
     loc_branch = keras.layers.Flatten()(loc_branch)
     loc_branch = keras.layers.Dense(512, activation='relu')(loc_branch)
 
@@ -32,8 +33,8 @@ def bounding_box_regression(feature_extr, num_classes:int)->keras.Layer:
     return tf.keras.layers.Reshape((num_classes, 4), name='bounding_box')(bbox_reg_output)
 
 def classifer(feature_extr, num_classes, l2_reg=0.01)->keras.Model:
-    
-    cls_branch = keras.layers.GlobalAveragePooling2D()(feature_extr)
+    cls_branch = keras.layers.Conv2D(256, (1, 1), activation='relu')(feature_extr)
+    cls_branch = keras.layers.GlobalAveragePooling2D()(cls_branch)
     cls_branch = keras.layers.Dense(1024, activation='relu')(cls_branch)
 
     return tf.keras.layers.Dense(units=num_classes, activation='sigmoid', 

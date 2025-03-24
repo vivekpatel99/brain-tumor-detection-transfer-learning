@@ -151,8 +151,9 @@ The following visualizations demonstrate the model's ability to locate and class
 
 This project draws inspiration and knowledge from the following resources:
 
-*   **Class Imbalance:**
+*  **Class Imbalance:**
     * [CheXpert-multilabel-classification-tensorflow](https://github.com/tamerthamoqa/CheXpert-multilabel-classification-tensorflow)
 
-* **GIoU loss:**
+*  **GIoU loss:**
     * [tensorflow addonsg iou_loss](https://github.com/tensorflow/addons/blob/v0.20.0/tensorflow_addons/losses/giou_loss.py#L26-L61)
+*  https://www.youtube.com/watch?v=8m3LvPg8EuI&t=110s - https://colab.research.google.com/drive/1klBxr93NYXrLFOVMXhm0RbVm5PIjfXQn#scrollTo=eqQe9NngQTar
