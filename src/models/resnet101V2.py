@@ -3,6 +3,7 @@ import math
 import keras
 import tensorflow as tf
 
+
 def feature_extractor(inputs)-> keras.Model:
     resnet101 = tf.keras.applications.ResNet101V2(
         include_top = False, 
@@ -23,19 +24,19 @@ def feature_extractor(inputs)-> keras.Model:
 
 def bounding_box_regression(feature_extr, num_classes:int)->keras.Layer:
     bbox_shape=4
-    loc_branch = keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(feature_extr)
-    loc_branch = keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same')(loc_branch)
+    loc_branch = keras.layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='bounding_box_conv2d_256')(feature_extr)
+    loc_branch = keras.layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='bounding_box_conv2d_256_2')(loc_branch)
     loc_branch = keras.layers.Flatten()(loc_branch)
-    loc_branch = keras.layers.Dense(512, activation='relu')(loc_branch)
+    loc_branch = keras.layers.Dense(1024, activation='relu')(loc_branch)
 
     # Add sigmoid activation to ensure output is between 0 and 1
-    bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='_bounding_box')(loc_branch)
+    bbox_reg_output = tf.keras.layers.Dense(units=bbox_shape*num_classes, name='bounding_box_reg_output')(loc_branch)
     return tf.keras.layers.Reshape((num_classes, 4), name='bounding_box')(bbox_reg_output)
 
 def classifer(feature_extr, num_classes, l2_reg=0.01)->keras.Model:
-    cls_branch = keras.layers.Conv2D(256, (1, 1), activation='relu')(feature_extr)
+    cls_branch = keras.layers.Conv2D(256, (1, 1), activation='relu', name='classification_conv2d_256')(feature_extr)
     cls_branch = keras.layers.GlobalAveragePooling2D()(cls_branch)
-    cls_branch = keras.layers.Dense(1024, activation='relu')(cls_branch)
+    cls_branch = keras.layers.Dense(1024, activation='relu', name='classification_dense_1024')(cls_branch)
 
     return tf.keras.layers.Dense(units=num_classes, activation='sigmoid', 
                                  kernel_regularizer=tf.keras.regularizers.l2(l2_reg), 

@@ -164,3 +164,26 @@ def plot_iou_histogram(output_dir, y_true_bbox, y_pred_bbox, is_image_show:bool=
         plt.show()
     plt.savefig(f"{output_dir}/iou_histogram.png")
     return fig   
+
+# def plot_iou_histogram(y_true_bbox, y_pred_bbox, class_ids):
+#     """
+#     Plots a histogram of Intersection over Union (IoU) scores.
+
+#     Args:
+#         y_true_bbox: Ground truth bounding boxes (list of lists or numpy array).
+#         y_pred_bbox: Predicted bounding boxes (list of lists or numpy array).
+#         class_ids: list of class ids.
+#     """
+#     fig, axs = plt.subplots(1)
+
+#     iou_scores = iou_metric(y_true_bbox, y_pred_bbox)
+
+#     # fig.figure(figsize=(10, 6))
+#     axs.hist(iou_scores, bins=20, range=(0, 1), edgecolor='black')
+#     axs.set_title('IoU Score Distribution')
+#     axs.set_xlabel('IoU Score')
+#     axs.set_ylabel('Frequency')
+#     axs.grid(True)
+#     plt.show()
+#     plt.savefig(f"{OUTPUT_DIR}/iou_histogram.png")
+#     return fig
