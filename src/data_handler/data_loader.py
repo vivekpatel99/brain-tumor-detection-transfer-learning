@@ -18,6 +18,7 @@ class DataLoader:
             layers.RandomContrast(0.3, seed=42),
             layers.RandomSaturation(0.3, seed=42),
             layers.RandomHue(0.3, seed=42),
+            layers.GaussianNoise(0.3, seed=49), 
         ])
 
     

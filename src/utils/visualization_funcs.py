@@ -141,7 +141,8 @@ def plot_auc_curve(output_dir, class_name_list, y_true, y_prob_pred):
     return fig
     
 
-def plot_iou_histogram(output_dir, y_true_bbox, y_pred_bbox, is_image_show:bool=True):
+
+def plot_iou_histogram(output_dir, y_true_bbox, y_pred_bbox, class_ids):
     """
     Plots a histogram of Intersection over Union (IoU) scores.
 
@@ -160,11 +161,9 @@ def plot_iou_histogram(output_dir, y_true_bbox, y_pred_bbox, is_image_show:bool=
     axs.set_xlabel('IoU Score')
     axs.set_ylabel('Frequency')
     axs.grid(True)
-    if is_image_show:
-        plt.show()
+    plt.show()
     plt.savefig(f"{output_dir}/iou_histogram.png")
-    return fig   
-
+    return fig
 # def plot_iou_histogram(y_true_bbox, y_pred_bbox, class_ids):
 #     """
 #     Plots a histogram of Intersection over Union (IoU) scores.

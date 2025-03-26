@@ -1,20 +1,20 @@
 # 🧠 Brain Tumor Multi-Label Classification and Detection with ResNet101
 
-[![Project Demo](reaadme-assets/title-img.png)](reaadme-assets/title-img.png)
+![Project Demo](readme-assets/title-img.png)
 
 ## 🎯 Project Overview
 
 This project focuses on developing a robust deep learning model for **multi-label classification and object detection of brain tumors** in medical images. Leveraging the power of the ResNet101 architecture, the model is trained to identify the presence of different tumor types and accurately locate them within the images. This work demonstrates the application of advanced computer vision techniques to a critical medical domain, potentially aiding in faster and more accurate diagnoses.
 
 **Key Objectives:**
-
 *   **Multi-Label Classification:** Identify the presence of multiple tumor types within a single image.
 *   **Object Detection:** Accurately locate and delineate tumor regions using bounding boxes.
 *   **High Accuracy:** Achieve high precision and recall in both classification and detection tasks.
 *   **Robustness:** Develop a model that generalizes well to unseen data.
 
 ## ✨ Key Features
-
+* ** Dataset Download: **  Automatically download dataset from [Roboflow's brain-tumor-detectio dataset](https://universe.roboflow.com/yousef-ghanem-jzj4y/brain-tumor-detection-fpf1f.) (Please save API keys on `.env` file)
+) 
 *   **Custom Loss Functions:**
     *   **IoU Loss:** Implemented a custom Intersection over Union (IoU) loss function ([`src/losses/iou_loss.py`](src/losses/iou_loss.py)) to optimize the accuracy of bounding box predictions.
     *   **Binary Weighted Loss:** Developed a custom binary weighted loss function (`src/losses/binary_weighted_loss.py`) to handle class imbalance and improve classification performance.
@@ -86,16 +86,9 @@ The project includes detailed notebooks that guide you through the entire proces
     *   Add your Roboflow API key (if you want to download the dataset directly).
     *   Example:
         ```
-        ROBOFLOW_API_KEY=your_api_key_here
+        ROBOFLOW_API_KEY=
         ```
 
-5.  **Configuration:**
-    *   Open `conf/config.yaml` to adjust parameters like:
-        *   Dataset paths (`DATASET_DIRS`)
-        *   Image size (`IMG_SIZE`)
-        *   Batch size (`BATCH_SIZE`)
-        *   Learning rate (`LEARNING_RATE`)
-        *   Number of epochs (`NUM_EPOCHS`)
 
 ## 🖥️ Hardware Specifications
 
@@ -109,33 +102,54 @@ While these specifications are recommended for optimal performance, the project 
 
 ## 🚀 Detection Results: A Visual Showcase
 
-The following visualizations demonstrate the model's ability to locate and classify brain tumors.
+The following visualizations demonstrate the model's ability to locate and classify brain tumors. These results are based on the model's performance on the validation dataset, providing insights into its generalization capabilities.
 
 **Key Visual Elements:**
 
-*   **Title Metrics:**
-    *   **Score:** Model's confidence in its prediction (higher is better).
-    *   **IoU (Intersection over Union):** Overlap between predicted and ground truth boxes (closer to 1.0 is better).
+*   **IoU Score (Intersection over Union) Histogram:**
+    *   **Description:** This histogram displays the distribution of IoU scores achieved by the model on the validation set. IoU is a critical metric for object detection, measuring the overlap between the predicted bounding box and the ground truth bounding box.
+    *   **Interpretation:**
+        *   **Higher bars on the right side (closer to 1.0):** Indicate a higher frequency of accurate bounding box predictions. This means the model is correctly localizing the tumors.
+        *   **Higher bars on after 0.5 (more on left side):** are better. It means that most of the predictions are above 0.5 IoU, which is generally considered a good threshold for object detection.
+        *   **Bars concentrated on the left side (closer to 0.0):** Suggest less accurate bounding box predictions, indicating that the model is struggling to precisely locate the tumors.
+    *   **Goal:** The ideal histogram would show a large concentration of bars towards the right side (high IoU values), indicating precise localization.
+    *   **Score:** higher bars on after 0.5 (more on left side) are better.
+    *   **Visualization:**
+        ![IoU Score performance through histogram](readme-assets/IoU-Score.png)
 
-!Object Detection Performance
-*Note: Replace `reaadme-assets/detection_example.png` with an actual image.*
+*   **ROC Curve (Receiver Operating Characteristic Curve):**
+    *   **Description:** The ROC curve illustrates the trade-off between the True Positive Rate (Sensitivity) and the False Positive Rate (1 - Specificity) at various classification thresholds. It's a fundamental tool for evaluating the performance of binary classification models.
+    *   **Interpretation:**
+        *   **Curve closer to the top-left corner:** Indicates better performance. A model with perfect classification ability would have a curve that goes straight up to the top-left corner and then horizontally to the right.
+        *   **Curve closer to the diagonal line:** Suggests performance no better than random guessing.
+        *   **Area Under the Curve (AUC):** The area under the ROC curve (AUC) is a single number that summarizes the overall performance. An AUC of 1.0 represents perfect classification, while an AUC of 0.5 represents random guessing.
+    *   **Goal:** The goal is to achieve a ROC curve that hugs the top-left corner as closely as possible, with a corresponding high AUC value.
+    *   **Visualization:**
+        ![ROC-Curve](readme-assets/ROC-Curve.png)
 
-**Performance Insights:**
+*   **Final Result Images (Labels with Bounding Boxes):**
+    *   **Description:** These images provide a visual representation of the model's final predictions on sample images from the validation set. They show the predicted bounding boxes around the tumors, along with the predicted tumor type labels.
+    *   **Interpretation:**
+        *   **Accurate Bounding Boxes:** The predicted bounding boxes should closely match the actual tumor regions.
+        *   **Correct Labels:** The predicted tumor type labels should be accurate.
+        *   **Confidence:** The model's confidence in its predictions can sometimes be inferred from the clarity and precision of the bounding boxes and labels.
+    *   **Goal:** The goal is to see accurate bounding boxes that tightly enclose the tumors, along with correct tumor type labels.
+    *   **Visualization:**
+        ![Final Result](readme-assets/final-result.png)
 
-*   **High Score, High IoU:** Indicates accurate object localization and high confidence.
-*   **High Score, Lower IoU:** Suggests the model confidently detects an object but with slight localization errors.
-*   **Low Score, Low IoU:** Indicates a failure case where the model is not confident and the localization is poor.
+
 
 **Achieved Performance:**
+* Training is done through multiple phases [04_model_building_training](notebooks/04_model_building_training.ipynb)
+1. Finding Baseline performance through training only individual heads
+    1. only classification head trainig [02_classifier_building](notebooks/02_classifier_building.ipynb)
+    2. only regression head training [03_regression_building](notebooks/03_regression_building.ipynb)
+2. Combine both heads and trained the model in 3 phases.
+    1. Phase 1-Training only for Regression head (Bounding box)
+    2. Phase 2-Training only for classification head 
+    3. Phase 3-Trining only for classification head 
 
-*   The model achieved a minimum loss of approximately **0.0264** on the validation set.
-*   This was achieved with the following hyperparameters:
-    ```python
-    batch_size = 64 #changed from 32 to 64
-    EPOCHS = 100 #changed from 50 to 100
-    learning_rate = 1e-4
-    ```
-
+    
 ## 🔭 Future Improvements
 
 *   **Loss Minimization:** Further reduce the loss to below `0.001` through:
@@ -145,15 +159,10 @@ The following visualizations demonstrate the model's ability to locate and class
 *   **Model Ensembling:** Combine multiple models to improve overall performance and robustness.
 *   **Advanced Data Augmentation:** Explore more sophisticated augmentation techniques.
 *   **Transfer Learning:** Experiment with different pre-trained models.
-*   **Deployment:** Package the model for easy deployment as a web service or mobile app.
+
 
 ## 📚 References
 
 This project draws inspiration and knowledge from the following resources:
-
-*  **Class Imbalance:**
-    * [CheXpert-multilabel-classification-tensorflow](https://github.com/tamerthamoqa/CheXpert-multilabel-classification-tensorflow)
-
-*  **GIoU loss:**
-    * [tensorflow addonsg iou_loss](https://github.com/tensorflow/addons/blob/v0.20.0/tensorflow_addons/losses/giou_loss.py#L26-L61)
-*  https://www.youtube.com/watch?v=8m3LvPg8EuI&t=110s - https://colab.research.google.com/drive/1klBxr93NYXrLFOVMXhm0RbVm5PIjfXQn#scrollTo=eqQe9NngQTar
+* https://www.youtube.com/watch?v=8m3LvPg8EuI&t=110s 
+* https://colab.research.google.com/drive/1klBxr93NYXrLFOVMXhm0RbVm5PIjfXQn#scrollTo=eqQe9NngQTar
