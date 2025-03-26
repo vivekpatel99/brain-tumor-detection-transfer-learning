@@ -144,9 +144,9 @@ The following visualizations demonstrate the model's ability to locate and class
     1. only classification head trainig [02_classifier_building](notebooks/02_classifier_building.ipynb)
     2. only regression head training [03_regression_building](notebooks/03_regression_building.ipynb)
 2. Combine both heads and trained the model in 3 phases.
-    1. Phase 1-Training only for Regression head (Bounding box)
-    2. Phase 2-Training only for classification head 
-    3. Phase 3-Trining only for classification head 
+    1. Phase 1-Training only for Regression head (Bounding box) (with all the Trainable layers except classification)
+    2. Phase 2-Training only for classification head (freezing all layers except classification=
+    3. Phase 3-Training classification head + Regression head (with 150 trainable layers)
 
     
 ## 🔭 Future Improvements
