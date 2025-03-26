@@ -22,7 +22,6 @@ This project focuses on developing a robust deep learning model for **multi-labe
 *   **Multi-Task Learning:** The model simultaneously performs classification and regression (bounding box prediction) in a single forward pass.
 *   **Data Augmentation:** Implemented various data augmentation techniques (brightness, contrast, saturation, hue) to enhance model robustness and generalization.
 *   **MLflow Integration:** Tracked experiments, logged metrics, and managed model artifacts using MLflow.
-*   **TensorBoard Integration:** Used TensorBoard for visualizing training progress, model architecture, and performance metrics.
 *   **Modular Design:** The code is organized into logical modules (data handling, models, losses, etc.) for better maintainability and readability.
 *   **Clear Notebooks:** Provided Jupyter Notebooks for EDA, model building, and training.
 
@@ -148,16 +147,6 @@ The following visualizations demonstrate the model's ability to locate and class
     2. Phase 2-Training only for classification head (freezing all layers except classification=
     3. Phase 3-Training classification head + Regression head (with 150 trainable layers)
 
-    
-## 🔭 Future Improvements
-
-*   **Loss Minimization:** Further reduce the loss to below `0.001` through:
-    *   **Hyperparameter Tuning:** Experiment with different learning rates, optimizers, and regularization techniques.
-    *   **Data Processing Pipeline Optimization:** Improve the efficiency and effectiveness of the `tf.data.Dataset` pipeline.
-*   **Failure Case Analysis:** Investigate the model's failure cases to identify patterns and areas for improvement.
-*   **Model Ensembling:** Combine multiple models to improve overall performance and robustness.
-*   **Advanced Data Augmentation:** Explore more sophisticated augmentation techniques.
-*   **Transfer Learning:** Experiment with different pre-trained models.
 
 
 ## 📚 References
