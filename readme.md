@@ -14,7 +14,6 @@ This project focuses on developing a robust deep learning model for **multi-labe
 
 ## ✨ Key Features
 * **Dataset Download:**  Automatically download dataset from [Roboflow's brain-tumor-detectio dataset](https://universe.roboflow.com/yousef-ghanem-jzj4y/brain-tumor-detection-fpf1f.) (Please save API keys on `.env` file)
-) 
 *   **Custom Loss Functions:**
     *   **IoU Loss:** Implemented a custom Intersection over Union (IoU) loss function ([`src/losses/iou_loss.py`](src/losses/iou_loss.py)) to optimize the accuracy of bounding box predictions.
     *   **Binary Weighted Loss:** Developed a custom binary weighted loss function (`src/losses/binary_weighted_loss.py`) to handle class imbalance and improve classification performance.
