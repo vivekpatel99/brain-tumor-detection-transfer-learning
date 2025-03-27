@@ -114,6 +114,16 @@ The following visualizations demonstrate the model's ability to locate and class
     *   **Score:** higher bars on after 0.5 (more on left side) are better.
     *   **Visualization:**
         ![IoU Score performance through histogram](readme-assets/IoU-Score.png)
+*  **Classification Report:**
+    |              | precision | recall | f1-score | support |
+    | ------------ | --------- | ------ | -------- | ------- |
+    | label0       | 0.94      | 0.85   | 0.90     | 588     |
+    | label1       | 1.00      | 0.89   | 0.94     | 962     |
+    | label2       | 0.95      | 0.78   | 0.86     | 554     |
+    | micro avg    | 0.97      | 0.85   | 0.91     | 2104    |
+    | macro avg    | 0.96      | 0.84   | 0.90     | 2104    |
+    | weighted avg | 0.97      | 0.85   | 0.91     | 2104    |
+    | samples avg  | 0.89      | 0.83   | 0.84     | 2104    |
 
 *   **ROC Curve (Receiver Operating Characteristic Curve):**
     *   **Description:** The ROC curve illustrates the trade-off between the True Positive Rate (Sensitivity) and the False Positive Rate (1 - Specificity) at various classification thresholds. It's a fundamental tool for evaluating the performance of binary classification models.
